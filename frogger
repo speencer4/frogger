@@ -1,0 +1,201 @@
+int frogX, frogY;
+int score;
+int frogSize = 30;
+int carWidth = 40;
+int carHeight = 30;
+int carSpeed = 2;
+int waterY = 120;
+int waterSpeed = 1;
+int waterGap = 100;
+int waterHeight = 40;
+int waterColor;
+int roadColor;
+int frogColor;
+int carColor;
+int backgroundColor;
+int logColor;
+
+ArrayList<Car> cars;
+ArrayList<Log> logs;
+
+void setup() {
+  size(500, 500);
+  frogX = width / 2;
+  frogY = height - 50;
+  score = 0;
+  cars = new ArrayList<Car>();
+  logs = new ArrayList<Log>();
+  waterColor = color(0, 100, 255);
+  roadColor = color(0);
+  frogColor = color(0, 255, 0);
+  carColor = color(255, 0, 0);
+  backgroundColor = color(0, 100, 0);
+  logColor = color(165, 42, 42);
+  spawnCars();
+  spawnLogs();
+}
+
+void draw() {
+  background(backgroundColor);
+  
+  // Draw road
+  fill(roadColor);
+  rect(0, waterY, width, waterHeight);
+  
+  // Draw water
+  fill(waterColor);
+  rect(0, 0, width, waterY);
+  
+  // Draw frog
+  fill(frogColor);
+  ellipse(frogX, frogY, frogSize, frogSize);
+  
+  // Draw logs
+  for (Log log : logs) {
+    log.move();
+    log.display();
+    if (log.hits(frogX, frogY, frogSize)) {
+      frogX += log.speed;
+    }
+  }
+  
+  // Check if frog is in water
+  if (frogY <= waterY) {
+    boolean onLog = false;
+    for (Log log : logs) {
+      if (log.hits(frogX, frogY, frogSize)) {
+        onLog = true;
+        break;
+      }
+    }
+    if (!onLog) {
+      resetGame();
+    }
+  }
+  
+  // Draw cars
+  for (Car car : cars) {
+    car.move();
+    car.display();
+    if (car.hits(frogX, frogY, frogSize)) {
+      resetGame();
+    }
+  }
+  
+  // Draw score
+  fill(255);
+  textAlign(LEFT);
+  textSize(20);
+  text("Score: " + score, 10, 30);
+}
+
+void spawnCars() {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 5; j++) {
+      cars.add(new Car(j * width / 5, waterY + waterHeight + 40 + i * 50, carWidth, carHeight, carSpeed));
+    }
+  }
+}
+
+void spawnLogs() {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 4; j++) {
+      logs.add(new Log(j * width / 4 + 50, waterY + 20 + i * 70, carWidth, carHeight, -carSpeed / 2));
+    }
+  }
+}
+
+void resetGame() {
+  score = 0;
+  frogX = width / 2;
+  frogY = height - 50;
+}
+
+void keyPressed() {
+  if (key == 'a' || key == 'A' || keyCode == LEFT) {
+    moveFrog(-frogSize, 0);
+  } else if (key == 'd' || key == 'D' || keyCode == RIGHT) {
+    moveFrog(frogSize, 0);
+  } else if (key == 'w' || key == 'W' || keyCode == UP) {
+    moveFrog(0, -frogSize);
+  } else if (key == 's' || key == 'S' || keyCode == DOWN) {
+    moveFrog(0, frogSize);
+  }
+}
+
+void moveFrog(int deltaX, int deltaY) {
+  frogX += deltaX;
+  frogY += deltaY;
+  frogX = constrain(frogX, 0, width - frogSize);
+  frogY = constrain(frogY, 0, height - frogSize);
+  checkWin();
+}
+
+void checkWin() {
+  if (frogY <= 0) {
+    score += 100; // Increase score when frog reaches top
+    frogX = width / 2; // Reset frog position
+    frogY = height - 50;
+  }
+}
+
+class Car {
+  float x, y, w, h;
+  float speed;
+  
+  Car(float x, float y, float w, float h, float speed) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.speed = speed;
+  }
+  
+  void move() {
+    x += speed;
+    if (x > width) {
+      x = -w;
+    }
+  }
+  
+  void display() {
+    fill(carColor);
+    rect(x, y, w, h);
+  }
+  
+  boolean hits(float frogX, float frogY, float frogSize) {
+    return (frogX + frogSize / 2 > x && frogX - frogSize / 2 < x + w && frogY + frogSize / 2 > y && frogY - frogSize / 2 < y + h);
+  }
+}
+
+class Log {
+  float x, y, w, h;
+  float speed;
+  
+  Log(float x, float y, float w, float h, float speed) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.speed = speed;
+  }
+  
+  void move() {
+    x += speed;
+    if (x < -w) {
+      x = width;
+    }
+    if (x > width) {
+      x = -w;
+    }
+  }
+  
+  void display() {
+    fill(logColor);
+    rect(x, y, w, h);
+  }
+  
+  boolean hits(float frogX, float frogY, float frogSize) {
+    return (frogX + frogSize / 2 > x && frogX - frogSize / 2 < x + w && frogY + frogSize / 2 > y && frogY - frogSize / 2 < y + h);
+  }
+}
